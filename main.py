@@ -4,17 +4,15 @@ import os
 
 app = Flask(__name__)
 
-def load_projects():
-    """Load project data from JSON file"""
-    projects_file = os.path.join(os.path.dirname(__file__), 'projects.json')
-    with open(projects_file, 'r') as f:
-        return json.load(f)
+# Load project data once at startup
+PROJECTS_FILE = os.path.join(os.path.dirname(__file__), 'projects.json')
+with open(PROJECTS_FILE, 'r', encoding='utf-8') as f:
+    PROJECTS = json.load(f)
 
 @app.route('/')
 def index():
     """Landing page showing all ML projects"""
-    projects = load_projects()
-    return render_template('index.html', projects=projects)
+    return render_template('index.html', projects=PROJECTS)
 
 @app.route('/about')
 def about():
