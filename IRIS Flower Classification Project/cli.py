@@ -5,6 +5,7 @@ Predict iris flower species based on measurements
 """
 import argparse
 import numpy as np
+import pandas as pd
 import sys
 try:
     from sklearn.externals import joblib
@@ -28,7 +29,6 @@ def load_model(model_path='./data/model.sav'):
 def predict_species(model, sepal_length, sepal_width, petal_length, petal_width):
     """Predict iris species from measurements"""
     try:
-        import pandas as pd
         # Use DataFrame with feature names to avoid warning
         features = pd.DataFrame([[sepal_length, sepal_width, petal_length, petal_width]], 
                                columns=['sepal_length', 'sepal_width', 'petal_length', 'petal_width'])
