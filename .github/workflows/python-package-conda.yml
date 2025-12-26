@@ -32,12 +32,4 @@ jobs:
       run: |
         conda install pytest
         pytest
-        python scrape_fifa.py
-        https://github.com/pratik-276/End-to-End-Machine-Learning-Projects.git
-        /GuessTheFootballer Project
-        pip install -r requirements.txt
-        set FLASK_APP=main.py
-flask run
-        
-        
-        
+
