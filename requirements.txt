@@ -9,7 +9,7 @@ scikit-learn>=0.23.1
 
 # Web Frameworks
 Flask>=2.0.2
-flask-cors
+flask-cors>=3.0.10
 gunicorn>=20.1.0
 Jinja2>=3.0.3
 
@@ -33,7 +33,7 @@ bpemb>=0.3.3
 
 # Model Boosting Libraries
 lightgbm>=2.2.1
-xgboost
+xgboost>=1.5.0
 
 # Data Processing
 joblib>=0.16.0
@@ -71,7 +71,7 @@ sqlitedict>=2.0.0
 
 # Statistics
 patsy>=0.5.1
-statsmodels
+statsmodels>=0.12.0
 
 # Jupyter/IPython (optional, for development)
 ipython>=8.3.0
