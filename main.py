@@ -1,43 +1,19 @@
 from flask import Flask, render_template
+import json
+import os
 
 app = Flask(__name__)
+
+def load_projects():
+    """Load project data from JSON file"""
+    projects_file = os.path.join(os.path.dirname(__file__), 'projects.json')
+    with open(projects_file, 'r') as f:
+        return json.load(f)
 
 @app.route('/')
 def index():
     """Landing page showing all ML projects"""
-    projects = [
-        {
-            'name': 'IRIS Flower Classification',
-            'description': 'A machine learning project for classifying iris flower species using sklearn.',
-            'folder': 'IRIS Flower Classification Project',
-            'technologies': ['Flask', 'scikit-learn', 'NumPy', 'pandas']
-        },
-        {
-            'name': 'Guess The Footballer',
-            'description': 'An interactive game that uses similarity matching to identify footballers.',
-            'folder': 'GuessTheFootballer project',
-            'technologies': ['Flask', 'pandas', 'SciPy']
-        },
-        {
-            'name': 'Breast Cancer Classification',
-            'description': 'Classification model for breast cancer diagnosis using logistic regression.',
-            'folder': 'Breast Cancer Classification Project',
-            'technologies': ['Streamlit', 'scikit-learn', 'plotly']
-        },
-        {
-            'name': 'Housing Prices Prediction Dashboard',
-            'description': 'Interactive dashboard for predicting housing prices using React and Flask.',
-            'folder': 'Housing Prices Prediction Dashboard using React and Flask',
-            'technologies': ['Flask', 'React', 'Machine Learning']
-        },
-        {
-            'name': 'Tweet Recommender',
-            'description': 'A recommendation system for tweets.',
-            'folder': 'Tweet Recommender',
-            'technologies': ['Flask', 'React', 'NLP']
-        }
-    ]
-    
+    projects = load_projects()
     return render_template('index.html', projects=projects)
 
 @app.route('/about')
