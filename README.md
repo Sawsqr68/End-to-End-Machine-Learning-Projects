@@ -7,6 +7,18 @@
 ## 📌 Introduction
 In most cases machine learning gets limited to the same call, fit, predict loop. Whereas ML is actually much more than that. This repository will be a place containing multiple ML projects which involves all the steps starting from data collection to final model deployment. Each of the projects have a separate readme file attached to them which will be explaining the steps to follow for recreating the project on your own system.
 
+## 🚀 Getting Started
+
+### Installation
+
+To install all dependencies required for all projects in this repository:
+
+```bash
+pip install -r requirements.txt
+```
+
+This will install all necessary packages for all the projects. If you only want to work on a specific project, you can install the dependencies from the individual project's `requirements.txt` file instead.
+
 ## Contents
 
 1. Data collection (present or scraped)
