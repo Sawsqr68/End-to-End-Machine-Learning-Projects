@@ -20,4 +20,6 @@ def about():
     return render_template('about.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Note: debug mode should only be used in development
+    # In production, use a WSGI server like gunicorn or uwsgi
+    app.run()
