@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Machine Learning Projects</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="container">
+                <h1>🤖 Machine Learning Projects</h1>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/about">About</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <h2>End-to-End Machine Learning Projects</h2>
+            <p>A collection of comprehensive machine learning projects covering data collection, 
+               cleaning, analysis, visualization, and model deployment.</p>
+        </section>
+
+        <section class="projects">
+            <h3>Projects</h3>
+            <div class="project-grid">
+                {% for project in projects %}
+                <div class="project-card">
+                    <h4>{{ project.name }}</h4>
+                    <p>{{ project.description }}</p>
+                    <div class="technologies">
+                        {% for tech in project.technologies %}
+                        <span class="tech-badge">{{ tech }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="project-info">
+                        <code>📁 {{ project.folder }}</code>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="features">
+            <h3>What's Included</h3>
+            <div class="feature-grid">
+                <div class="feature">
+                    <span class="icon">📊</span>
+                    <h4>Data Collection</h4>
+                    <p>Working with real datasets and web scraping</p>
+                </div>
+                <div class="feature">
+                    <span class="icon">🧹</span>
+                    <h4>Data Cleaning</h4>
+                    <p>Handling missing values and outliers</p>
+                </div>
+                <div class="feature">
+                    <span class="icon">📈</span>
+                    <h4>EDA & Visualization</h4>
+                    <p>Exploratory data analysis with interactive charts</p>
+                </div>
+                <div class="feature">
+                    <span class="icon">🤖</span>
+                    <h4>ML Models</h4>
+                    <p>Building and training classification models</p>
+                </div>
+                <div class="feature">
+                    <span class="icon">🚀</span>
+                    <h4>Deployment</h4>
+                    <p>Web applications with Flask and React</p>
+                </div>
+                <div class="feature">
+                    <span class="icon">🎯</span>
+                    <h4>Real Applications</h4>
+                    <p>Interactive demos and predictions</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 End-to-End Machine Learning Projects. Built with Flask.</p>
+        </div>
+    </footer>
+</body>
+</html>
