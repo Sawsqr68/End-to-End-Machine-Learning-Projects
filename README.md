@@ -28,3 +28,10 @@ In most cases machine learning gets limited to the same call, fit, predict loop.
 3. <a href="https://github.com/pratik-276/End-to-End-Machine-Learning-Projects/tree/master/Breast%20Cancer%20Classification%20Project">Breast Cancer Classification Project</a>
 
 More projects coming up soon. Do drop a ⭐ if you like it.
+cli.py loads models via joblib, requiring sklearn
+try:
+    from sklearn.externals import joblib  # Deprecated path
+except ImportError:
+    import joblib  # Falls back to standalone joblib
+
+model = joblib.load(model_path)  # Requires sklearn for unpickling sklearn models
