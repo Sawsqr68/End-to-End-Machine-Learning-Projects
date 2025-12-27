@@ -35,13 +35,52 @@ https://github.com/pratik-276/End-to-End-Machine-Learning-Projects.git
 pip install -r requirements.txt
 ```
 
-5. Run the following commands in the command line to get your flask app started
+5. Run the application using one of the following methods:
+
+**Option A: Flask Web Application**
+```sh
+set FLASK_APP=main.py
+flask run
+```
+Then go to `http://127.0.0.1:5000/` to access the web interface.
+
+**Option B: Command Line Interface (CLI)**
+```sh
+# Interactive mode
+python cli.py
+
+# Or predict directly with measurements
+python cli.py --sepal-length 5.1 --sepal-width 3.5 --petal-length 1.4 --petal-width 0.2
+
+# Short form
+python cli.py -sl 5.1 -sw 3.5 -pl 1.4 -pw 0.2
+```
+
+
+## Usage
+
+### Web Interface
+The Flask application provides a complete web interface with visualizations:
 ```sh
 set FLASK_APP=main.py
 flask run
 ```
 
-6. Go to `http://127.0.0.1:5000/` and check out the flask app.
+### Command Line Interface (CLI)
+The CLI allows for quick predictions from the terminal:
+```sh
+# Interactive mode - you'll be prompted for measurements
+python cli.py
+
+# Direct prediction with arguments
+python cli.py --sepal-length 5.1 --sepal-width 3.5 --petal-length 1.4 --petal-width 0.2
+
+# Using short form arguments
+python cli.py -sl 5.1 -sw 3.5 -pl 1.4 -pw 0.2
+
+# Get help
+python cli.py --help
+```
 
 ## Contents
 

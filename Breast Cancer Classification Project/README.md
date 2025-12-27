@@ -35,14 +35,52 @@ https://github.com/pratik-276/End-to-End-Machine-Learning-Projects.git
 pip install -r requirements.txt
 ```
 
-5. Run the following commands in the command line to get your streamlit app started
+5a. **Option 1: Run the Streamlit web application**
+```sh
+streamlit run main.py
+```
+After the previous step wait for some seconds, it will automatically open the deployed webpage on the browser.
+
+5b. **Option 2: Use the CLI (Command Line Interface)**
+```sh
+# Interactive mode with simplified input
+python cli.py
+
+# Show model information
+python cli.py --info
+
+# Force retrain the model
+python cli.py --train
+
+# Get help
+python cli.py --help
+```
+Note: The CLI provides a simplified interface for demonstration. In practice, medical diagnosis requires all 30 features from proper medical tests.
+
+7. Suggest if any improvements can be made or anything wrong. (an absolute necessary step)
+
+## Usage
+
+### Web Interface (Streamlit)
+Run the Streamlit application for the complete experience with visualizations:
 ```sh
 streamlit run main.py
 ```
 
-6. After the previous step wait for some seconds, it will automatically open the deployed webpage on the browser.
+### Command Line Interface (CLI)
+The project now includes a CLI for quick predictions:
+```sh
+# Interactive mode - you'll be prompted for measurements
+python cli.py
 
-7. Suggest if any improvements can be made or anything wrong. (an absolute necessary step)
+# Show detailed model information
+python cli.py --info
+
+# Force retrain the model
+python cli.py --train
+```
+
+⚠️ **Important**: The CLI uses simplified input for demonstration purposes. Medical diagnosis requires all 30 tumor cell measurements from proper tests. This tool is for educational purposes only.
 
 ## Contents
 
