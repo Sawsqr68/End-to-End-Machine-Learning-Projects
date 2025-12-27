@@ -7,19 +7,25 @@ import argparse
 import sys
 import pandas as pd
 import numpy as np
-from sklearn import preprocessing
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 import joblib
 import os
 
 
-def load_or_train_model(data_path='data.csv', model_path='model.pkl'):
-    """Load existing model or train a new one"""
-    if os.path.exists(model_path):
+def load_or_train_model(data_path='data.csv', model_path='model.pkl', scaler_path='scaler.pkl'):
+    """Load existing model and scaler or train new ones"""
+    if os.path.exists(model_path) and os.path.exists(scaler_path):
         print(f"Loading existing model from {model_path}...")
-        model = joblib.load(model_path)
-        return model
+        try:
+            model = joblib.load(model_path)
+            scaler = joblib.load(scaler_path)
+            return model, scaler
+        except Exception as e:
+            print(f"Error loading model or scaler: {e}")
+            print("Retraining model...")
+            # Fall through to training
     
     print("Training new model...")
     try:
@@ -34,8 +40,9 @@ def load_or_train_model(data_path='data.csv', model_path='model.pkl'):
         X = data.drop('diagnosis', axis=1)
         y = data['diagnosis']
         
-        # Scale the data
-        X_scaled = preprocessing.scale(X)
+        # Create and fit scaler
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
         
         # Split the data
         X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=42)
@@ -44,22 +51,27 @@ def load_or_train_model(data_path='data.csv', model_path='model.pkl'):
         model = LogisticRegression(max_iter=10000, random_state=42)
         model.fit(X_train, y_train)
         
-        # Save model
+        # Save model and scaler
         joblib.dump(model, model_path)
+        joblib.dump(scaler, scaler_path)
         print(f"Model trained and saved to {model_path}")
+        print(f"Scaler saved to {scaler_path}")
         print(f"Model accuracy: {model.score(X_test, y_test):.2%}")
         
-        return model
+        return model, scaler
     except Exception as e:
         print(f"Error training model: {e}")
         sys.exit(1)
 
 
-def predict_diagnosis(model, features):
+def predict_diagnosis(model, scaler, features):
     """Predict diagnosis from features"""
     try:
-        # Ensure features is properly scaled
-        features_scaled = preprocessing.scale(features.reshape(1, -1))
+        # Scale features using the fitted scaler (suppress sklearn feature names warning)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=UserWarning, module='sklearn')
+            features_scaled = scaler.transform(features.reshape(1, -1))
         prediction = model.predict(features_scaled)[0]
         probability = model.predict_proba(features_scaled)[0]
         
@@ -84,7 +96,7 @@ def get_feature_names():
     ]
 
 
-def interactive_mode(model):
+def interactive_mode(model, scaler):
     """Interactive mode for predictions with simplified input"""
     print("\n=== Breast Cancer Diagnosis Predictor ===")
     print("Note: This model requires 30 features. For demo purposes, we'll use simplified input.")
@@ -122,7 +134,7 @@ def interactive_mode(model):
             0.13, 0.11, 0.08, 0.21, 0.08  # worst features
         ])
         
-        diagnosis, probability = predict_diagnosis(model, features)
+        diagnosis, probability = predict_diagnosis(model, scaler, features)
         
         print(f"\n{'='*50}")
         print(f"Predicted Diagnosis: {diagnosis}")
@@ -164,18 +176,22 @@ Note: This tool requires 30 features for accurate prediction.
     
     parser.add_argument('--data', default='data.csv', help='Path to data CSV file')
     parser.add_argument('--model', default='model.pkl', help='Path to model file')
+    parser.add_argument('--scaler', default='scaler.pkl', help='Path to scaler file')
     parser.add_argument('--info', action='store_true', help='Show model information')
     parser.add_argument('--train', action='store_true', help='Force retrain the model')
     
     args = parser.parse_args()
     
     # Force retrain if requested
-    if args.train and os.path.exists(args.model):
-        os.remove(args.model)
-        print("Existing model removed. Retraining...")
+    if args.train:
+        if os.path.exists(args.model):
+            os.remove(args.model)
+        if os.path.exists(args.scaler):
+            os.remove(args.scaler)
+        print("Existing model and scaler removed. Retraining...")
     
-    # Load or train model
-    model = load_or_train_model(args.data, args.model)
+    # Load or train model and scaler
+    model, scaler = load_or_train_model(args.data, args.model, args.scaler)
     
     if args.info:
         print("\n=== Model Information ===")
@@ -188,7 +204,7 @@ Note: This tool requires 30 features for accurate prediction.
         return
     
     # Interactive mode
-    interactive_mode(model)
+    interactive_mode(model, scaler)
 
 
 if __name__ == '__main__':
