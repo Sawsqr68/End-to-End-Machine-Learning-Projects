@@ -18,9 +18,14 @@ def load_or_train_model(data_path='data.csv', model_path='model.pkl', scaler_pat
     """Load existing model and scaler or train new ones"""
     if os.path.exists(model_path) and os.path.exists(scaler_path):
         print(f"Loading existing model from {model_path}...")
-        model = joblib.load(model_path)
-        scaler = joblib.load(scaler_path)
-        return model, scaler
+        try:
+            model = joblib.load(model_path)
+            scaler = joblib.load(scaler_path)
+            return model, scaler
+        except Exception as e:
+            print(f"Error loading model or scaler: {e}")
+            print("Retraining model...")
+            # Fall through to training
     
     print("Training new model...")
     try:
@@ -62,10 +67,10 @@ def load_or_train_model(data_path='data.csv', model_path='model.pkl', scaler_pat
 def predict_diagnosis(model, scaler, features):
     """Predict diagnosis from features"""
     try:
-        # Scale features using the fitted scaler (suppress feature names warning)
+        # Scale features using the fitted scaler (suppress sklearn feature names warning)
         import warnings
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+            warnings.filterwarnings('ignore', category=UserWarning, module='sklearn')
             features_scaled = scaler.transform(features.reshape(1, -1))
         prediction = model.predict(features_scaled)[0]
         probability = model.predict_proba(features_scaled)[0]
