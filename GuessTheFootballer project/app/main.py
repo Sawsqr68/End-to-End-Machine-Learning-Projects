@@ -4,6 +4,16 @@ import random
 from scipy.spatial import distance
 app = Flask(__name__)
 
+# Cache the dataset to avoid repeated network requests
+_cached_data = None
+
+def get_cached_data():
+    """Load and cache the player dataset."""
+    global _cached_data
+    if _cached_data is None:
+        _cached_data = pd.read_csv('https://raw.githubusercontent.com/pratik-276/Machine_Learning_Projects/master/Creating%20a%20Kaggle%20Workflow/data.csv')
+    return _cached_data
+
 def value(value):
     value = value.replace('€','')
     if 'M' in value:
@@ -44,7 +54,7 @@ def get_five_similar(data, id1):
     return df['index'].tolist()
 
 def six_ids():
-    data = pd.read_csv('https://raw.githubusercontent.com/pratik-276/Machine_Learning_Projects/master/Creating%20a%20Kaggle%20Workflow/data.csv')
+    data = get_cached_data()
     df = data[data['Potential']>85].reset_index(drop=True)
     player_index = random.randint(0,df.shape[0]-1)
     five_ids = get_five_similar(data, player_index)
@@ -62,7 +72,7 @@ def game():
     ids = [0,1,2,3,4,5]
     actual = ids
     main_id = ids[-1]
-    data = pd.read_csv('https://raw.githubusercontent.com/pratik-276/Machine_Learning_Projects/master/Creating%20a%20Kaggle%20Workflow/data.csv')
+    data = get_cached_data()
     data = data.loc[ids]
     ids = random.sample(ids, len(ids))
     dicty = {}
