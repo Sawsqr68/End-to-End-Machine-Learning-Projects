@@ -10,6 +10,11 @@ from flask_cors import CORS
 from xgboost import XGBRegressor
 from sklearn.ensemble import RandomForestRegressor
 from lightgbm import LGBMRegressor
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
@@ -81,7 +86,7 @@ def hello_world():
 
             return str(mse)
     except Exception as e:
-        print(f"Error in prediction: {e}")
+        logger.error(f"Error in prediction: {e}")
 
     return "0"
 
@@ -119,7 +124,7 @@ def hello_world1():
 
         return str(mse)
     except Exception as e:
-        print(f"Error in training: {e}")
+        logger.error(f"Error in training: {e}")
 
     return "0"
 

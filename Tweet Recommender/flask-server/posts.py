@@ -71,15 +71,21 @@ def get_posts(user_name, topics):
 
     scores = [0] * len(final_df)
 
-    # Vectorize the similarity calculation for better performance
+    # Vectorize the similarity calculation for better performance using numpy operations
     final_df_vectors = final_df.iloc[:, -len(vectorizer.get_feature_names_out()):].values
     
     for i in range(len(user_df)):
         content = user_df.iloc[i]['content']
         pred = vectorizer.transform([content]).toarray()[0]
-        # Calculate cosine similarity for all rows at once
-        similarities = 1 - np.array([spatial.distance.cosine(pred, row) for row in final_df_vectors])
-        scores = [scores[j] + similarities[j] for j in range(len(scores))]
+        # Calculate cosine similarity for all rows at once using numpy dot product
+        pred_norm = np.linalg.norm(pred)
+        if pred_norm > 0:
+            vector_norms = np.linalg.norm(final_df_vectors, axis=1)
+            # Avoid division by zero
+            valid_norms = vector_norms > 0
+            similarities = np.zeros(len(final_df_vectors))
+            similarities[valid_norms] = np.dot(final_df_vectors[valid_norms], pred) / (vector_norms[valid_norms] * pred_norm)
+            scores = [scores[j] + similarities[j] for j in range(len(scores))]
 
     for indx, score in enumerate(scores):
         scores[indx] = score / len(user_df)

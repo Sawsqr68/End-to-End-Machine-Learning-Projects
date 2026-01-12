@@ -74,7 +74,7 @@ def utility(q, limit=100):
                 quoteCount = int(tweet.quoteCount)
             except AttributeError:
                 print('AttributeError @quoteCount')
-                quoteCount = None 
+                quoteCount = 0 
 
             try:
                 conversationId = str(tweet.conversationId)
