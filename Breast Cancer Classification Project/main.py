@@ -12,7 +12,13 @@ from sklearn.metrics import plot_confusion_matrix
 plt.rcParams['figure.figsize'] = 8, 5
 plt.style.use("fivethirtyeight")
 pd.options.plotting.backend = "plotly"
-data = pd.read_csv('data.csv')
+
+# Cache data loading to avoid repeated file I/O
+@st.cache_data
+def load_data():
+    return pd.read_csv('data.csv')
+
+data = load_data()
 
 st.title('Breast Cancer Classification Project')
 st.write('''Cancer occurs when changes called mutations take place in genes that regulate cell growth. The mutations let the cells divide and multiply in an uncontrolled way.
@@ -28,7 +34,13 @@ st.markdown('## Description of Data')
 st.dataframe(data.describe())
 st.write('\n\n')
 st.markdown('## Correlation in the Data')
-sns.heatmap(data.corr())
+
+# Cache correlation computation
+@st.cache_data
+def compute_correlation(df):
+    return df.corr()
+
+sns.heatmap(compute_correlation(data))
 st.pyplot()
 
 #MISSING VALUES

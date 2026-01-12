@@ -14,37 +14,55 @@ from lightgbm import LGBMRegressor
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
 
-@app.route('/prediction', methods=['POST'])
-def hello_world():
-    try:
-        models = request.json
+# Cache loaded data and models at startup to avoid repeated I/O operations
+_cached_data = None
+_cached_splits = None
+_cached_models = {}
+
+def get_cached_data():
+    """Load and cache the training data and splits."""
+    global _cached_data, _cached_splits
+    if _cached_data is None:
         data = pd.read_csv(os.path.join(app.static_folder, "processed_train_data.csv"))
         X = data.drop('SalePrice', axis=1)
         y = data['SalePrice']
-
         X_train, X_val, y_train, y_val = train_test_split(X, y, train_size=0.8, random_state=13)
-
+        
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train)
         X_val_scaled = scaler.transform(X_val)
         
+        _cached_data = (X_train_scaled, X_val_scaled, y_train, y_val)
+        _cached_splits = (X_train, X_val, y_train, y_val)
+    return _cached_data
+
+def get_cached_model(model_name):
+    """Load and cache pre-trained models."""
+    if model_name not in _cached_models:
+        model_path = os.path.join(app.static_folder, f"{model_name}.sav")
+        _cached_models[model_name] = pickle.load(open(model_path, 'rb'))
+    return _cached_models[model_name]
+
+@app.route('/prediction', methods=['POST'])
+def hello_world():
+    try:
+        models = request.json
+        X_train_scaled, X_val_scaled, y_train, y_val = get_cached_data()
+        
         if models["blend"]:
-            preds = np.array([0] * 291)
+            preds = np.zeros(len(y_val))
 
             if models["rf"] > 0:
-                rf = pickle.load(open(os.path.join(app.static_folder, "rf.sav"), 'rb'))
-                #rf.fit(X_train_scaled, y_train)
-                preds = np.add(preds, np.array(list(rf.predict(X_val_scaled) * models["rf"])))
+                rf = get_cached_model("rf")
+                preds += rf.predict(X_val_scaled) * models["rf"]
 
             if models["xgb"] > 0:
-                xgb = pickle.load(open(os.path.join(app.static_folder, "xgb.sav"), 'rb'))
-                #xgb.fit(X_train_scaled, y_train)
-                preds = np.add(preds, np.array(list(xgb.predict(X_val_scaled) * models["xgb"])))
+                xgb = get_cached_model("xgb")
+                preds += xgb.predict(X_val_scaled) * models["xgb"]
                 
             if models["lgbm"] > 0:
-                lgbm = pickle.load(open(os.path.join(app.static_folder, "lgbm.sav"), 'rb'))
-                #lgbm.fit(X_train_scaled, y_train)
-                preds = np.add(preds, np.array(list(lgbm.predict(X_val_scaled) * models["lgbm"])))
+                lgbm = get_cached_model("lgbm")
+                preds += lgbm.predict(X_val_scaled) * models["lgbm"]
 
             mse = mean_squared_error(y_val, preds) ** 0.5
 
@@ -52,25 +70,23 @@ def hello_world():
 
         else:
             if models["rf"] == 1.0:
-                rf = pickle.load(open(os.path.join(app.static_folder, "rf.sav"), 'rb'))
-                #rf.fit(X_train_scaled, y_train)
+                rf = get_cached_model("rf")
                 preds = rf.predict(X_val_scaled)
 
-            if models["xgb"] == 1.0:
-                xgb = pickle.load(open(os.path.join(app.static_folder, "xgb.sav"), 'rb'))
-                #xgb.fit(X_train_scaled, y_train)
+            elif models["xgb"] == 1.0:
+                xgb = get_cached_model("xgb")
                 preds = xgb.predict(X_val_scaled)
                 
-            if models["lgbm"] == 1.0:
-                lgbm = pickle.load(open(os.path.join(app.static_folder, "lgbm.sav"), 'rb'))
-                #lgbm.fit(X_train_scaled, y_train)
+            elif models["lgbm"] == 1.0:
+                lgbm = get_cached_model("lgbm")
                 preds = lgbm.predict(X_val_scaled)
 
             mse = mean_squared_error(y_val, preds) ** 0.5
 
             return str(mse)
-    except:
-        pass
+    except Exception as e:
+        app.logger.error(f"Error in prediction endpoint: {str(e)}")
+        return "0", 500
 
     return "0"
 
@@ -79,12 +95,9 @@ def hello_world():
 def hello_world1():
     try:
         models = request.json
-        data = pd.read_csv(os.path.join(app.static_folder, "processed_train_data.csv"))
-        X = data.drop('SalePrice', axis=1)
-        y = data['SalePrice']
-
-        X_train, X_val, y_train, y_val = train_test_split(X, y, train_size=0.8, random_state=13)
-
+        _, _, _, _ = get_cached_data()  # Ensure data is loaded
+        X_train, X_val, y_train, y_val = _cached_splits
+        
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train)
         X_val_scaled = scaler.transform(X_val)
@@ -94,21 +107,24 @@ def hello_world1():
             rf.fit(X_train_scaled, y_train)
             preds = rf.predict(X_val_scaled)
 
-        if models["model"] == "xgb":
+        elif models["model"] == "xgb":
             xgb = XGBRegressor(booster='gbtree', objective='reg:squarederror', max_depth=models["maxDepth"], n_estimators=models["nEstimators"], learning_rate=models["learningRate"])
             xgb.fit(X_train_scaled, y_train)
             preds = xgb.predict(X_val_scaled)
             
-        if models["model"] == "lgbm":
+        elif models["model"] == "lgbm":
             lgbm = LGBMRegressor(boosting_type='gbdt',objective='regression', max_depth=models["maxDepth"], n_estimators=models["nEstimators"], learning_rate=models["learningRate"])
             lgbm.fit(X_train_scaled, y_train)
             preds = lgbm.predict(X_val_scaled)
+        else:
+            return "0", 400
 
         mse = mean_squared_error(y_val, preds) ** 0.5
 
         return str(mse)
-    except:
-        pass
+    except Exception as e:
+        app.logger.error(f"Error in train endpoint: {str(e)}")
+        return "0", 500
 
     return "0"
 
