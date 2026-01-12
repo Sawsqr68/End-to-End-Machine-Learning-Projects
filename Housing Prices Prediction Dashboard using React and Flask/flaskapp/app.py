@@ -14,6 +14,17 @@ from lightgbm import LGBMRegressor
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
 
+# Load pre-trained models once at startup for better performance
+_cached_models = {}
+
+def get_model(model_name):
+    global _cached_models
+    if model_name not in _cached_models:
+        model_path = os.path.join(app.static_folder, f"{model_name}.sav")
+        _cached_models[model_name] = pickle.load(open(model_path, 'rb'))
+    return _cached_models[model_name]
+
+
 @app.route('/prediction', methods=['POST'])
 def hello_world():
     try:
@@ -32,17 +43,17 @@ def hello_world():
             preds = np.array([0] * 291)
 
             if models["rf"] > 0:
-                rf = pickle.load(open(os.path.join(app.static_folder, "rf.sav"), 'rb'))
+                rf = get_model("rf")
                 #rf.fit(X_train_scaled, y_train)
                 preds = np.add(preds, np.array(list(rf.predict(X_val_scaled) * models["rf"])))
 
             if models["xgb"] > 0:
-                xgb = pickle.load(open(os.path.join(app.static_folder, "xgb.sav"), 'rb'))
+                xgb = get_model("xgb")
                 #xgb.fit(X_train_scaled, y_train)
                 preds = np.add(preds, np.array(list(xgb.predict(X_val_scaled) * models["xgb"])))
                 
             if models["lgbm"] > 0:
-                lgbm = pickle.load(open(os.path.join(app.static_folder, "lgbm.sav"), 'rb'))
+                lgbm = get_model("lgbm")
                 #lgbm.fit(X_train_scaled, y_train)
                 preds = np.add(preds, np.array(list(lgbm.predict(X_val_scaled) * models["lgbm"])))
 
@@ -52,25 +63,25 @@ def hello_world():
 
         else:
             if models["rf"] == 1.0:
-                rf = pickle.load(open(os.path.join(app.static_folder, "rf.sav"), 'rb'))
+                rf = get_model("rf")
                 #rf.fit(X_train_scaled, y_train)
                 preds = rf.predict(X_val_scaled)
 
             if models["xgb"] == 1.0:
-                xgb = pickle.load(open(os.path.join(app.static_folder, "xgb.sav"), 'rb'))
+                xgb = get_model("xgb")
                 #xgb.fit(X_train_scaled, y_train)
                 preds = xgb.predict(X_val_scaled)
                 
             if models["lgbm"] == 1.0:
-                lgbm = pickle.load(open(os.path.join(app.static_folder, "lgbm.sav"), 'rb'))
+                lgbm = get_model("lgbm")
                 #lgbm.fit(X_train_scaled, y_train)
                 preds = lgbm.predict(X_val_scaled)
 
             mse = mean_squared_error(y_val, preds) ** 0.5
 
             return str(mse)
-    except:
-        pass
+    except Exception as e:
+        print(f"Error in prediction: {e}")
 
     return "0"
 
@@ -107,8 +118,8 @@ def hello_world1():
         mse = mean_squared_error(y_val, preds) ** 0.5
 
         return str(mse)
-    except:
-        pass
+    except Exception as e:
+        print(f"Error in training: {e}")
 
     return "0"
 

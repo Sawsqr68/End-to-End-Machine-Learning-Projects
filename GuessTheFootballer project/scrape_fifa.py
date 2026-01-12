@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 base_url = "https://sofifa.com/players?offset="
 columns = ['ID', 'Name', 'Age', 'Photo', 'Nationality', 'Flag', 'Overall', 'Potential', 'Club', 'Club Logo', 'Value', 'Wage', 'Special']
-data = pd.DataFrame(columns = columns)
+players_list = []
 
 for offset in range(0, 300):
     url = base_url + str(offset * 61)
@@ -28,9 +28,9 @@ for offset in range(0, 300):
         value = td[6].text.strip()
         wage = td[7].text.strip()
         special = td[8].text.strip()
-        player_data = pd.DataFrame([[pid, name, age, picture, nationality, flag_img, overall, potential, club, club_logo, value, wage, special]])
-        player_data.columns = columns
-        data = data.append(player_data, ignore_index=True)
+        players_list.append([pid, name, age, picture, nationality, flag_img, overall, potential, club, club_logo, value, wage, special])
+
+data = pd.DataFrame(players_list, columns=columns)
 data = data.drop_duplicates()
 
 data.to_csv('data.csv', index=False)

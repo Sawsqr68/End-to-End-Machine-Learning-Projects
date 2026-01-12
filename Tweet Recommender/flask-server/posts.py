@@ -14,6 +14,26 @@ nltk.download('stopwords')
 nltk.download('punkt')
 from nltk.corpus import stopwords
 
+# Cache stopwords to avoid reading file on every request
+_cached_stopwords = None
+
+def get_stopwords():
+    global _cached_stopwords
+    if _cached_stopwords is None:
+        stop_words = []
+        with open("StopWords_Generic.txt", "r") as f:
+            stop_text = f.read()
+            stop_words_upper = stop_text.split("\n")
+            for word in stop_words_upper:
+                stop_words.append(word.lower())
+        
+        for word in stopwords.words('english'):
+            if word not in stop_words:
+                stop_words.append(word)
+        
+        _cached_stopwords = stop_words
+    return _cached_stopwords
+
 
 def utility(q, limit=100):
     tweets = []
@@ -296,17 +316,7 @@ def get_posts(user_name, topics):
     merged_df = merged_df.reset_index(drop=True)
     merged_df = merged_df.rename(columns={'content': 'tweet_content'})
 
-    stop_words = []
-
-    f = open("StopWords_Generic.txt", "r")
-    stop_text = f.read()
-    stop_words_upper = stop_text.split("\n")
-    for word in stop_words_upper:
-        stop_words.append(word.lower())
-
-    for word in stopwords.words('english'):
-        if word not in stop_words:
-            stop_words.append(word)
+    stop_words = get_stopwords()
 
     vectorizer = TfidfVectorizer(stop_words=stop_words)
     X = vectorizer.fit_transform(merged_df['tweet_content'].tolist())
@@ -319,12 +329,15 @@ def get_posts(user_name, topics):
 
     scores = [0] * len(final_df)
 
+    # Vectorize the similarity calculation for better performance
+    final_df_vectors = final_df.iloc[:, -len(vectorizer.get_feature_names_out()):].values
+    
     for i in range(len(user_df)):
         content = user_df.iloc[i]['content']
         pred = vectorizer.transform([content]).toarray()[0]
-        for j in range(len(final_df)):
-            row = list(final_df.iloc[j])[-len(pred):]
-            scores[j] += (1 - spatial.distance.cosine(pred, row))
+        # Calculate cosine similarity for all rows at once
+        similarities = 1 - np.array([spatial.distance.cosine(pred, row) for row in final_df_vectors])
+        scores = [scores[j] + similarities[j] for j in range(len(scores))]
 
     for indx, score in enumerate(scores):
         scores[indx] = score / len(user_df)
