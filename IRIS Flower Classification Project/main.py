@@ -1,6 +1,6 @@
 from flask import Flask, render_template, url_for, request
 import numpy as np
-from sklearn.externals import joblib
+import joblib
 app = Flask(__name__)
 
 filename = './data/model.sav'

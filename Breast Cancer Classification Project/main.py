@@ -110,8 +110,6 @@ with st.echo():
     #checking roc curve
 
     from sklearn.metrics import roc_curve
-    model = LogisticRegression()
-    model.fit(X_train, y_train)
     y_pred_prob = model.predict_proba(X_test)[:,1]
     fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob, pos_label='M')
     plt.plot([0, 1], [0, 1], 'k--')
