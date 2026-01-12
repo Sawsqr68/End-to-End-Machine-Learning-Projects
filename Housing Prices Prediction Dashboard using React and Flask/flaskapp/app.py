@@ -14,36 +14,64 @@ from lightgbm import LGBMRegressor
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
 
+
+def load_model(model_name):
+    """
+    Load a pickled model from the static folder.
+    
+    Args:
+        model_name: Name of the model file (e.g., 'rf.sav')
+        
+    Returns:
+        Loaded model object
+    """
+    model_path = os.path.join(app.static_folder, model_name)
+    with open(model_path, 'rb') as f:
+        return pickle.load(f)
+
+
+def prepare_data():
+    """
+    Load and prepare data for training/prediction.
+    
+    Note: This function recreates the scaler and data split on each call.
+    For better performance in production, consider caching these operations
+    or storing the scaler for reuse across multiple requests.
+    
+    Returns:
+        Tuple of (X_train_scaled, X_val_scaled, y_train, y_val)
+    """
+    data = pd.read_csv(os.path.join(app.static_folder, "processed_train_data.csv"))
+    X = data.drop('SalePrice', axis=1)
+    y = data['SalePrice']
+    
+    X_train, X_val, y_train, y_val = train_test_split(X, y, train_size=0.8, random_state=13)
+    
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_val_scaled = scaler.transform(X_val)
+    
+    return X_train_scaled, X_val_scaled, y_train, y_val
+
 @app.route('/prediction', methods=['POST'])
 def hello_world():
     try:
         models = request.json
-        data = pd.read_csv(os.path.join(app.static_folder, "processed_train_data.csv"))
-        X = data.drop('SalePrice', axis=1)
-        y = data['SalePrice']
-
-        X_train, X_val, y_train, y_val = train_test_split(X, y, train_size=0.8, random_state=13)
-
-        scaler = StandardScaler()
-        X_train_scaled = scaler.fit_transform(X_train)
-        X_val_scaled = scaler.transform(X_val)
+        X_train_scaled, X_val_scaled, y_train, y_val = prepare_data()
         
         if models["blend"]:
             preds = np.array([0] * 291)
 
             if models["rf"] > 0:
-                rf = pickle.load(open(os.path.join(app.static_folder, "rf.sav"), 'rb'))
-                #rf.fit(X_train_scaled, y_train)
+                rf = load_model("rf.sav")
                 preds = np.add(preds, np.array(list(rf.predict(X_val_scaled) * models["rf"])))
 
             if models["xgb"] > 0:
-                xgb = pickle.load(open(os.path.join(app.static_folder, "xgb.sav"), 'rb'))
-                #xgb.fit(X_train_scaled, y_train)
+                xgb = load_model("xgb.sav")
                 preds = np.add(preds, np.array(list(xgb.predict(X_val_scaled) * models["xgb"])))
                 
             if models["lgbm"] > 0:
-                lgbm = pickle.load(open(os.path.join(app.static_folder, "lgbm.sav"), 'rb'))
-                #lgbm.fit(X_train_scaled, y_train)
+                lgbm = load_model("lgbm.sav")
                 preds = np.add(preds, np.array(list(lgbm.predict(X_val_scaled) * models["lgbm"])))
 
             mse = mean_squared_error(y_val, preds) ** 0.5
@@ -52,18 +80,15 @@ def hello_world():
 
         else:
             if models["rf"] == 1.0:
-                rf = pickle.load(open(os.path.join(app.static_folder, "rf.sav"), 'rb'))
-                #rf.fit(X_train_scaled, y_train)
+                rf = load_model("rf.sav")
                 preds = rf.predict(X_val_scaled)
 
             if models["xgb"] == 1.0:
-                xgb = pickle.load(open(os.path.join(app.static_folder, "xgb.sav"), 'rb'))
-                #xgb.fit(X_train_scaled, y_train)
+                xgb = load_model("xgb.sav")
                 preds = xgb.predict(X_val_scaled)
                 
             if models["lgbm"] == 1.0:
-                lgbm = pickle.load(open(os.path.join(app.static_folder, "lgbm.sav"), 'rb'))
-                #lgbm.fit(X_train_scaled, y_train)
+                lgbm = load_model("lgbm.sav")
                 preds = lgbm.predict(X_val_scaled)
 
             mse = mean_squared_error(y_val, preds) ** 0.5
@@ -79,15 +104,7 @@ def hello_world():
 def hello_world1():
     try:
         models = request.json
-        data = pd.read_csv(os.path.join(app.static_folder, "processed_train_data.csv"))
-        X = data.drop('SalePrice', axis=1)
-        y = data['SalePrice']
-
-        X_train, X_val, y_train, y_val = train_test_split(X, y, train_size=0.8, random_state=13)
-
-        scaler = StandardScaler()
-        X_train_scaled = scaler.fit_transform(X_train)
-        X_val_scaled = scaler.transform(X_val)
+        X_train_scaled, X_val_scaled, y_train, y_val = prepare_data()
 
         if models["model"] == "rf":
             rf = RandomForestRegressor(max_depth=models["maxDepth"], n_estimators=models["nEstimators"])
