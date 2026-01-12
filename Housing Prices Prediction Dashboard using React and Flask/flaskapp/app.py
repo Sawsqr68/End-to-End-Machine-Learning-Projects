@@ -23,10 +23,32 @@ CORS(app)
 _cached_models = {}
 
 def get_model(model_name):
+    """
+    Load and cache pre-trained models to avoid repeated I/O operations.
+    
+    Args:
+        model_name: Name of the model file (without .sav extension)
+        
+    Returns:
+        Loaded model object
+        
+    Raises:
+        FileNotFoundError: If model file doesn't exist
+        Exception: If model cannot be loaded
+    """
     global _cached_models
     if model_name not in _cached_models:
         model_path = os.path.join(app.static_folder, f"{model_name}.sav")
-        _cached_models[model_name] = pickle.load(open(model_path, 'rb'))
+        try:
+            with open(model_path, 'rb') as f:
+                _cached_models[model_name] = pickle.load(f)
+            logger.info(f"Successfully loaded model: {model_name}")
+        except FileNotFoundError:
+            logger.error(f"Model file not found: {model_path}")
+            raise
+        except Exception as e:
+            logger.error(f"Error loading model {model_name}: {e}")
+            raise
     return _cached_models[model_name]
 
 

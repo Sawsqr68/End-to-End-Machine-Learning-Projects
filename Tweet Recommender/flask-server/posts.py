@@ -21,11 +21,16 @@ def get_stopwords():
     global _cached_stopwords
     if _cached_stopwords is None:
         stop_words = []
-        with open("StopWords_Generic.txt", "r") as f:
-            stop_text = f.read()
-            stop_words_upper = stop_text.split("\n")
-            for word in stop_words_upper:
-                stop_words.append(word.lower())
+        try:
+            with open("StopWords_Generic.txt", "r") as f:
+                stop_text = f.read()
+                stop_words_upper = stop_text.split("\n")
+                for word in stop_words_upper:
+                    stop_words.append(word.lower())
+        except FileNotFoundError:
+            print("Warning: StopWords_Generic.txt not found. Using only NLTK stopwords.")
+        except Exception as e:
+            print(f"Warning: Error reading StopWords_Generic.txt: {e}. Using only NLTK stopwords.")
         
         for word in stopwords.words('english'):
             if word not in stop_words:
@@ -69,7 +74,7 @@ def get_posts(user_name, topics):
     del vectorized_df
     del merged_df
 
-    scores = [0] * len(final_df)
+    scores = np.zeros(len(final_df))
 
     # Vectorize the similarity calculation for better performance using numpy operations
     final_df_vectors = final_df.iloc[:, -len(vectorizer.get_feature_names_out()):].values
@@ -85,10 +90,10 @@ def get_posts(user_name, topics):
             valid_norms = vector_norms > 0
             similarities = np.zeros(len(final_df_vectors))
             similarities[valid_norms] = np.dot(final_df_vectors[valid_norms], pred) / (vector_norms[valid_norms] * pred_norm)
-            scores = [scores[j] + similarities[j] for j in range(len(scores))]
+            scores += similarities
 
-    for indx, score in enumerate(scores):
-        scores[indx] = score / len(user_df)
+    scores = scores / len(user_df)
+    scores = scores.tolist()
 
     final_df['tweet_scores'] = pd.Series(scores)
     final_df = final_df.sort_values('tweet_scores', ascending=False)
