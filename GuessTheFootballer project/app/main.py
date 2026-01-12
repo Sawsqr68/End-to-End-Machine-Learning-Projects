@@ -14,17 +14,23 @@ def parse_currency(currency_str):
         
     Returns:
         Float value of the currency
+        
+    Raises:
+        ValueError: If currency_str cannot be parsed as a number
     """
-    currency_str = currency_str.replace('€','')
-    if 'M' in currency_str:
-        value = float(currency_str.replace('M',''))
-        value = value * 1000000
-    elif 'K' in currency_str:
-        value = float(currency_str.replace('K',''))
-        value = value * 1000
-    else:
-        value = float(currency_str)
-    return value
+    try:
+        currency_str = currency_str.replace('€','')
+        if 'M' in currency_str:
+            value = float(currency_str.replace('M',''))
+            value = value * 1000000
+        elif 'K' in currency_str:
+            value = float(currency_str.replace('K',''))
+            value = value * 1000
+        else:
+            value = float(currency_str)
+        return value
+    except (ValueError, AttributeError) as e:
+        raise ValueError(f"Invalid currency string: {currency_str}") from e
 
 def cleaner(data):
     data = data[['Age','Overall', 'Potential', 'Value', 'Wage']].copy()

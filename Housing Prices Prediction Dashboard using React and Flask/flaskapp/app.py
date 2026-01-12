@@ -34,6 +34,10 @@ def prepare_data():
     """
     Load and prepare data for training/prediction.
     
+    Note: This function recreates the scaler and data split on each call.
+    For better performance in production, consider caching these operations
+    or storing the scaler for reuse across multiple requests.
+    
     Returns:
         Tuple of (X_train_scaled, X_val_scaled, y_train, y_val)
     """
