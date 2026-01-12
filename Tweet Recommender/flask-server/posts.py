@@ -1,6 +1,7 @@
 
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from scipy import spatial
 import numpy as np
 import spacy
@@ -28,7 +29,7 @@ def get_stopwords():
                 for word in stop_words_upper:
                     stop_words.append(word.lower())
         except FileNotFoundError:
-            pass  # File may not exist, continue with NLTK stopwords only
+            print("Warning: StopWords_Generic.txt not found, using only NLTK stopwords")
         
         for word in stopwords.words('english'):
             if word not in stop_words:
@@ -67,19 +68,15 @@ def get_posts(user_name, topics):
     user_content = user_df['content'].tolist()
     user_vectors = vectorizer.transform(user_content).toarray()
     
-    # Use vectorized operations instead of nested loops
+    # Get tweet vectors
     tweet_vectors = final_df.iloc[:, -user_vectors.shape[1]:].values
     
-    # Compute cosine similarities using matrix operations
-    # This replaces the O(n*m) nested loop with vectorized operations
-    similarities = np.zeros(len(final_df))
-    for user_vec in user_vectors:
-        # Compute similarity with all tweets at once
-        for j in range(len(final_df)):
-            similarities[j] += (1 - spatial.distance.cosine(user_vec, tweet_vectors[j]))
+    # Compute cosine similarities using vectorized operations
+    # Shape: (n_user_tweets, n_topic_tweets) -> averaged to (n_topic_tweets,)
+    similarities = cosine_similarity(user_vectors, tweet_vectors)
     
-    # Normalize by number of user tweets
-    scores = similarities / len(user_df)
+    # Average similarity scores across all user tweets
+    scores = similarities.mean(axis=0)
 
     final_df['tweet_scores'] = pd.Series(scores)
     final_df = final_df.sort_values('tweet_scores', ascending=False)

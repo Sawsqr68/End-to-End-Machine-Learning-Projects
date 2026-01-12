@@ -73,11 +73,11 @@ def hello_world():
                 rf = get_cached_model("rf")
                 preds = rf.predict(X_val_scaled)
 
-            elif models["xgb"] == 1.0:
+            if models["xgb"] == 1.0:
                 xgb = get_cached_model("xgb")
                 preds = xgb.predict(X_val_scaled)
                 
-            elif models["lgbm"] == 1.0:
+            if models["lgbm"] == 1.0:
                 lgbm = get_cached_model("lgbm")
                 preds = lgbm.predict(X_val_scaled)
 

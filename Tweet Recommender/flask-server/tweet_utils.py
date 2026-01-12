@@ -36,7 +36,7 @@ def utility(q, limit=100):
             
             # Handle retweetCount with fallback
             if hasattr(tweet, 'retweetCount'):
-                retweetCount = int(tweet.retweetCount) if tweet.retweetCount else 0
+                retweetCount = int(tweet.retweetCount) if tweet.retweetCount is not None else 0
             else:
                 retweetCount = 0
                 
