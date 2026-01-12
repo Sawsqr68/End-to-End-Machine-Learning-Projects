@@ -4,28 +4,33 @@ import random
 from scipy.spatial import distance
 app = Flask(__name__)
 
-def value(value):
-    value = value.replace('€','')
-    if 'M' in value:
-        value = float(value.replace('M',''))
-        value = value*1000000
-    elif 'K' in value:
-        value = float(value.replace('K',''))
-        value = value*1000
+def parse_currency(currency_str):
+    """
+    Parse currency string and convert to numeric value.
+    Handles both 'M' (millions) and 'K' (thousands) suffixes.
+    
+    Args:
+        currency_str: String like '€10M', '€500K', etc.
+        
+    Returns:
+        Float value of the currency
+    """
+    currency_str = currency_str.replace('€','')
+    if 'M' in currency_str:
+        value = float(currency_str.replace('M',''))
+        value = value * 1000000
+    elif 'K' in currency_str:
+        value = float(currency_str.replace('K',''))
+        value = value * 1000
+    else:
+        value = float(currency_str)
     return value
-
-def wage(wage):
-    wage = wage.replace('€','')
-    if 'K' in wage:
-        wage = float(wage.replace('K',''))
-        wage = wage*1000
-    return wage
 
 def cleaner(data):
     data = data[['Age','Overall', 'Potential', 'Value', 'Wage']].copy()
-    data['Value'] = data['Value'].apply(value)
+    data['Value'] = data['Value'].apply(parse_currency)
     data['Value'] = data['Value'].astype('float')
-    data['Wage'] = data['Wage'].apply(wage)
+    data['Wage'] = data['Wage'].apply(parse_currency)
     data['Wage'] = data['Wage'].astype('float')
     data['Age'] = data['Age'].astype('int')
     data['Overall'] = data['Overall'].astype('int')
